@@ -51,6 +51,18 @@ define_zome! {
                     validation: |_source: Address, _target: Address, _ctx: hdk::ValidationData| {
                         Ok(())
                     }
+               ),
+               to!(
+                   "message",
+                    tag: "received",
+
+                    validation_package: || {
+                        hdk::ValidationPackageDefinition::ChainFull
+                    },
+
+                    validation: |base: Address, target: Address, _ctx: hdk::ValidationData| {
+                        Ok(())
+                    }
                )
            ]
        )
@@ -70,6 +82,11 @@ define_zome! {
                 inputs: | |,
                 outputs: |result: JsonString|,
                 handler: handle_get_current_user
+            }
+            receive_message: {
+                inputs: |message_address: HashString|,
+                outputs: |result: JsonString|,
+                handler: handle_receive_message
             }
 
             // get_all_user: {
@@ -118,4 +135,26 @@ fn handle_get_current_user() -> JsonString {
     };
 
     res.into()
+}
+
+fn handle_receive_message(message_address: HashString) -> JsonString {
+    
+    let agent_address = &HashString::from(hdk::AGENT_ADDRESS.to_string());
+    let res = match hdk::get_links(&agent_address, "user_data") {
+        Ok(result) => {
+            let user_address = result.addresses()[0].clone();
+            match hdk::link_entries(
+                &user_address,
+                &message_address,
+                "received"
+            ) {
+                Ok(_) => json!({"success": true}),
+                Err(err) => json!({ "success": false, "error": err})
+            }
+        },
+        Err(hdk_error) => json!({"success": false, "err": hdk_error}),
+    };
+
+    res.into()
+
 }

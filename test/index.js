@@ -37,7 +37,7 @@ test('bob can create and send message to alice', async (t) => {
   
   let res2 = {};
   while (!res2.success) {
-    res2 = bob.call("messages", "main", "send_message", {message_address, user_address});
+    res2 = alice.call("users", "main", "receive_message", {message_address});
     await new Promise(resolve => setTimeout(resolve, 1000))
     console.log(res2)
   }
