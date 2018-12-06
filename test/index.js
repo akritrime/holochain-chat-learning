@@ -24,7 +24,7 @@ test('Creates new user for both bob and alice', (t) => {
   t.end()
 })
 
-test('bob can create and send message to alice', (t) => {
+test('bob can create and send message to alice', async (t) => {
   t.plan(2)
   let user_address;
   
@@ -33,8 +33,14 @@ test('bob can create and send message to alice', (t) => {
 
   user_address = alice.call("users", "main", "get_current_user", {}).address;
   const message_address = res1.address;
-  const res2 = bob.call("messages", "main", "send_message", {message_address, user_address})
-  console.log(res2)
+
+  
+  let res2 = {};
+  while (!res2.success) {
+    res2 = bob.call("messages", "main", "send_message", {message_address, user_address});
+    await new Promise(resolve => setTimeout(resolve, 1000))
+    console.log(res2)
+  }
   t.equal(res1.success, true);
   t.equal(res2.success, true)
   // t.equal(result, "expected result!")

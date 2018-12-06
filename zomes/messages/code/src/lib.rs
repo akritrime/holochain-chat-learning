@@ -148,30 +148,6 @@ define_zome! {
                         Ok(())
                     }
                )
-            //    from!(
-            //        "commitments",
-            //         tag: "committed_by",
-
-            //         validation_package: || {
-            //             hdk::ValidationPackageDefinition::ChainFull
-            //         },
-
-            //         validation: |base: Address, target: Address, _ctx: hdk::ValidationData| {
-            //             Ok(())
-            //         }
-            //    ),
-            //    from!(
-            //        "commitments",
-            //         tag: "committed_to",
-
-            //         validation_package: || {
-            //             hdk::ValidationPackageDefinition::ChainFull
-            //         },
-
-            //         validation: |base: Address, target: Address, _ctx: hdk::ValidationData| {
-            //             Ok(())
-            //         }
-            //    )
            ]
        )
     ]
