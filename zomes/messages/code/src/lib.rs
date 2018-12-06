@@ -61,7 +61,7 @@ fn handle_send_message(message_address: HashString, user_address: HashString) ->
 fn handle_get_all_messages_by(user_address: HashString) -> JsonString {
     let res = match hdk::get_links(&user_address, "sent_by") {
         Ok(result) => {
-            let commitments: Vec<Message> = result
+            let messages: Vec<Message> = result
                 .addresses()
                 .iter()
                 .map(|address| hdk::get_entry(address.clone()))
@@ -73,7 +73,7 @@ fn handle_get_all_messages_by(user_address: HashString) -> JsonString {
             // let result : Result<Option<Metric>,_> = hdk::get_entry(user_address.clone());
             json!({
                 "success": true,
-                "commitments": commitments
+                "messages": messages
             })
         }
         Err(hdk_error) => json!({
@@ -88,7 +88,7 @@ fn handle_get_all_messages_by(user_address: HashString) -> JsonString {
 fn handle_get_all_messages_to(user_address: HashString) -> JsonString {
     let res = match hdk::get_links(&user_address, "sent_to") {
         Ok(result) => {
-            let commitments: Vec<Message> = result
+            let messages: Vec<Message> = result
                 .addresses()
                 .iter()
                 .map(|address| hdk::get_entry(address.clone()))
@@ -100,7 +100,7 @@ fn handle_get_all_messages_to(user_address: HashString) -> JsonString {
             // let result : Result<Option<Metric>,_> = hdk::get_entry(user_address.clone());
             json!({
                 "success": true,
-                "commitments": commitments
+                "messages": messages
             })
         }
         Err(hdk_error) => json!({
