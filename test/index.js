@@ -20,7 +20,6 @@ container.start()
 const alice = container.makeCaller("alice", dnaPath)
 const bob   = container.makeCaller("bob", dnaPath)
 
-// await new Promise(r => setTimeout(r, 2000))
 test('Creates new user for both bob and alice', (t) => {
     t.plan(2)
     const res1 = alice.call("users", "main", "create_user", { user: { handle: "Alice", email: "alice@test.net"}})
@@ -46,7 +45,7 @@ test('bob can create and send message to alice', async (t) => {
     console.log("Message created")
     
     let res = {};
-    
+
     while (!res.success) {
       res = alice.call("users", "main", "receive_message", {message_address: message.address});
       await new Promise(resolve => setTimeout(resolve, 1000))
@@ -60,3 +59,5 @@ test('bob can create and send message to alice', async (t) => {
     // ends this test
     t.end()
 })
+
+container.stop()
