@@ -20,10 +20,12 @@ container.start()
 const alice = container.makeCaller("alice", dnaPath)
 const bob   = container.makeCaller("bob", dnaPath)
 
+// await new Promise(r => setTimeout(r, 2000))
 test('Creates new user for both bob and alice', (t) => {
     t.plan(2)
     const res1 = alice.call("users", "main", "create_user", { user: { handle: "Alice", email: "alice@test.net"}})
     const res2 = bob.call("users", "main", "create_user", {user: { handle: "Bob", email: "bob@test.net"}})
+    
     // console.log(res1, res2)
     t.equal(res1.success, true);
     t.equal(res2.success, true)
@@ -60,4 +62,4 @@ test('bob can create and send message to alice', async (t) => {
     t.end()
 })
 
-container.stop()
+test.onFinish(() => container.stop())

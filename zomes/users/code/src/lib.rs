@@ -101,7 +101,7 @@ define_zome! {
 
 fn handle_create_user(user: User) -> JsonString {
     let entry = Entry::App("user".into(), user.into());
-    let agent_address = &Address::from(AGENT_ADDRESS.to_string());
+    let agent_address = &hdk::AGENT_ADDRESS;
     match hdk::commit_entry(&entry) {
         Ok(address) => {
             match hdk::link_entries(&agent_address, &address, "user_data") {
@@ -116,7 +116,7 @@ fn handle_create_user(user: User) -> JsonString {
 }
 
 fn handle_get_current_user() -> JsonString {
-    let agent_address = &Address::from(hdk::AGENT_ADDRESS.to_string());
+    let agent_address = &hdk::AGENT_ADDRESS;
     let res = match hdk::get_links(&agent_address, "user_data") {
         Ok(result) => {
             let user_address = &result.addresses()[0];
@@ -124,7 +124,7 @@ fn handle_get_current_user() -> JsonString {
             match result {
                 Ok(Some(Entry::App(_, value))) => json!({
                     "success": true,
-                    "user": User::try_from(value).unwrap(),
+                    // "user": User::try_from(value).unwrap(),
                     "address": user_address.clone()
                 }),
                 Ok(_) =>  json!({"success": false, "err": "No entry found"}),
@@ -139,7 +139,7 @@ fn handle_get_current_user() -> JsonString {
 
 fn handle_receive_message(message_address: Address) -> JsonString {
     
-    let agent_address = &Address::from(hdk::AGENT_ADDRESS.to_string());
+    let agent_address = &hdk::AGENT_ADDRESS.to_string();
     let res = match hdk::get_links(&agent_address, "user_data") {
         Ok(result) => {
             let user_address = result.addresses()[0].clone();
