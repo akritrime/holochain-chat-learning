@@ -1,27 +1,28 @@
 #![feature(try_from)]
-#[macro_use]
-extern crate hdk;
-extern crate serde;
-#[macro_use]
-extern crate serde_derive;
-#[macro_use]
-extern crate serde_json;
-extern crate holochain_core_types;
-#[macro_use]
-extern crate holochain_core_types_derive;
-use std::convert::TryFrom;
+use serde_derive::{Serialize, Deserialize};
+use holochain_core_types_derive::DefaultJson;
+use serde_json::json;
+
 use hdk::{
+    define_zome,
+    entry,
+    load_json,
+    from,
+    link,
+    // to,
+    // AGENT_ADDRESS,
+    // error::ZomeApiError,
     holochain_core_types::{
-        dna::zome::entry_types::Sharing,
-        hash::HashString,
+        dna::entry_types::Sharing,
         json::JsonString,
+        // json::DefaultJson,
         entry::Entry,
-        entry::entry_type::EntryType,
         error::HolochainError,
-        cas::content::Address,
+        cas::content::Address
     },
 };
 
+use std::convert::TryFrom;
 
 #[derive(Serialize, Deserialize, Debug, DefaultJson)]
 struct Message {
@@ -29,7 +30,7 @@ struct Message {
 }
 
 fn handle_create_message(message: Message, user_address: Address) -> JsonString {
-    let entry = Entry::new(EntryType::App("message".into()), message);
+    let entry = Entry::App("message".into(), message.into());
     let res = match hdk::commit_entry(&entry) {
         Ok(address) => {
             match hdk::link_entries(
@@ -46,7 +47,7 @@ fn handle_create_message(message: Message, user_address: Address) -> JsonString 
     res.into()
 }
 
-// fn handle_send_message(message_address: HashString, user_address: HashString) -> JsonString {
+// fn handle_send_message(message_address: Address, user_address: Address) -> JsonString {
 //     let res = match hdk::link_entries(
 //         &user_address,
 //         &message_address,
@@ -58,16 +59,20 @@ fn handle_create_message(message: Message, user_address: Address) -> JsonString 
 //     res.into()
 // }
 
-fn handle_get_all_messages_by(user_address: HashString) -> JsonString {
-    let res = match hdk::get_links(&user_address, "sent_by") {
+fn handle_get_all_messages_by(user_address: Address) -> JsonString {
+    let res = match hdk::get_links(&user_address, "sent") {
         Ok(result) => {
             let messages: Vec<Message> = result
                 .addresses()
                 .iter()
-                .map(|address| hdk::get_entry(address.clone()))
+                .map(|address| hdk::get_entry(&address))
                 .filter_map(|i| i.ok())
+                .map(|r| match r {
+                    Some(Entry::App(_, value)) => Some(value),
+                    _ => None
+                })
                 .filter_map(|i| i)
-                .map(|i| Message::try_from(i.value()))
+                .map(|i| Message::try_from(i))
                 .filter_map(|i| i.ok())
                 .collect();
             // let result : Result<Option<Metric>,_> = hdk::get_entry(user_address.clone());
@@ -85,7 +90,7 @@ fn handle_get_all_messages_by(user_address: HashString) -> JsonString {
 }
 
 
-// fn handle_get_all_messages_to(user_address: HashString) -> JsonString {
+// fn handle_get_all_messages_to(user_address: Address) -> JsonString {
 //     let res = match hdk::get_links(&user_address, "sent_to") {
 //         Ok(result) => {
 //             let messages: Vec<Message> = result
@@ -160,25 +165,25 @@ define_zome! {
         main (Public) {
             // create user
             create_message: {
-                inputs: |message: Message, user_address: HashString|,
+                inputs: |message: Message, user_address: Address|,
                 outputs: |result: JsonString|,
                 handler: handle_create_message
             }
 
             // send_message: {
-            //     inputs: |message_address: HashString, user_address: HashString|,
+            //     inputs: |message_address: Address, user_address: Address|,
             //     outputs: |result: JsonString|,
             //     handler: handle_send_message
             // }
 
             get_all_messages_by: {
-                inputs: |user_address: HashString|,
+                inputs: |user_address: Address|,
                 outputs: |result: JsonString|,
                 handler: handle_get_all_messages_by
             }
 
             // get_all_messages_to: {
-            //     inputs: |user_address: HashString|,
+            //     inputs: |user_address: Address|,
             //     outputs: |result: JsonString|,
             //     handler: handle_get_all_messages_to
             // }

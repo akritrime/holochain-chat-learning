@@ -1,29 +1,29 @@
 #![feature(try_from)]
-#[macro_use]
-extern crate hdk;
-extern crate serde;
-#[macro_use]
-extern crate serde_derive;
-#[macro_use]
-extern crate serde_json;
-extern crate holochain_core_types;
-#[macro_use]
-extern crate holochain_core_types_derive;
+use serde_derive::{Serialize, Deserialize};
+use holochain_core_types_derive::DefaultJson;
+use serde_json::json;
+
+use hdk::{
+    define_zome,
+    entry,
+    load_json,
+    from,
+    link,
+    to,
+    AGENT_ADDRESS,
+    // error::ZomeApiError,
+    holochain_core_types::{
+        dna::entry_types::Sharing,
+        json::JsonString,
+        // json::DefaultJson,
+        entry::Entry,
+        error::HolochainError,
+        cas::content::Address
+    },
+};
 
 use std::convert::TryFrom;
 
-use hdk::{
-    holochain_core_types::{
-        dna::zome::entry_types::Sharing,
-        hash::HashString,
-        json::JsonString,
-        entry::Entry,
-        entry::entry_type::EntryType,
-        error::HolochainError,
-        cas::content::Address,
-    },
-    AGENT_ADDRESS
-};
 #[derive(Serialize, Deserialize, Debug, DefaultJson)]
 struct User {
     handle: String,
@@ -84,7 +84,7 @@ define_zome! {
                 handler: handle_get_current_user
             }
             receive_message: {
-                inputs: |message_address: HashString|,
+                inputs: |message_address: Address|,
                 outputs: |result: JsonString|,
                 handler: handle_receive_message
             }
@@ -100,8 +100,8 @@ define_zome! {
 }
 
 fn handle_create_user(user: User) -> JsonString {
-    let entry = Entry::new(EntryType::App("user".into()), user);
-    let agent_address = &HashString::from(AGENT_ADDRESS.to_string());
+    let entry = Entry::App("user".into(), user.into());
+    let agent_address = &Address::from(AGENT_ADDRESS.to_string());
     match hdk::commit_entry(&entry) {
         Ok(address) => {
             match hdk::link_entries(&agent_address, &address, "user_data") {
@@ -116,18 +116,18 @@ fn handle_create_user(user: User) -> JsonString {
 }
 
 fn handle_get_current_user() -> JsonString {
-    let agent_address = &HashString::from(hdk::AGENT_ADDRESS.to_string());
+    let agent_address = &Address::from(hdk::AGENT_ADDRESS.to_string());
     let res = match hdk::get_links(&agent_address, "user_data") {
         Ok(result) => {
-            let user_address = result.addresses()[0].clone();
-            let result = hdk::get_entry(user_address.clone());
+            let user_address = &result.addresses()[0];
+            let result = hdk::get_entry(&user_address);
             match result {
-                Ok(Some(user)) => json!({
+                Ok(Some(Entry::App(_, value))) => json!({
                     "success": true,
-                    "user": User::try_from(user.value().clone()).unwrap(),
-                    "address": user_address
+                    "user": User::try_from(value).unwrap(),
+                    "address": user_address.clone()
                 }),
-                Ok(None) =>  json!({"success": false, "err": "No entry found"}),
+                Ok(_) =>  json!({"success": false, "err": "No entry found"}),
                 Err(err) => json!({"success": false, "error": err}),
             }
         },
@@ -137,9 +137,9 @@ fn handle_get_current_user() -> JsonString {
     res.into()
 }
 
-fn handle_receive_message(message_address: HashString) -> JsonString {
+fn handle_receive_message(message_address: Address) -> JsonString {
     
-    let agent_address = &HashString::from(hdk::AGENT_ADDRESS.to_string());
+    let agent_address = &Address::from(hdk::AGENT_ADDRESS.to_string());
     let res = match hdk::get_links(&agent_address, "user_data") {
         Ok(result) => {
             let user_address = result.addresses()[0].clone();

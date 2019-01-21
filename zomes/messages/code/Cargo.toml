@@ -8,10 +8,10 @@ edition = "2018"
 serde = "1.0"
 serde_json = "1.0"
 serde_derive = "1.0"
-hdk = { git = "https://github.com/holochain/holochain-rust", branch = "master" }
-holochain_core_types = { git = "https://github.com/holochain/holochain-rust", branch = "master" }
-holochain_core_types_derive = { git = "https://github.com/holochain/holochain-rust", branch = "master" }
-holochain_wasm_utils = { git = "https://github.com/holochain/holochain-rust", branch = "master" }
+hdk = { git = "https://github.com/holochain/holochain-rust", rev = "da7952601b72c0d6fc79c654d74206dd50dc7f5b" }
+holochain_core_types = { git = "https://github.com/holochain/holochain-rust", rev = "da7952601b72c0d6fc79c654d74206dd50dc7f5b" }
+holochain_core_types_derive = { git = "https://github.com/holochain/holochain-rust", rev = "da7952601b72c0d6fc79c654d74206dd50dc7f5b" }
+holochain_wasm_utils = { git = "https://github.com/holochain/holochain-rust", rev = "da7952601b72c0d6fc79c654d74206dd50dc7f5b" }
 
 [lib]
 path = "src/lib.rs"
